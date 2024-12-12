@@ -1,6 +1,7 @@
 package com.mygdx.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -18,6 +19,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Texture basketTexture;
 	private Rectangle basket;
 	private Array<Rectangle> eggs;
+	private Array<Rectangle> chickens;
 	private long lastEggTime;
 	private BitmapFont font;
 	private int score;
@@ -32,12 +34,24 @@ public class MyGdxGame extends ApplicationAdapter {
 		eggTexture = new Texture("ovo.png"); // Placeholder for egg
 		basketTexture = new Texture("balao.png"); // Placeholder for basket
 
+
 		// Initialize basket
 		basket = new Rectangle();
 		basket.x = Gdx.graphics.getWidth() / 2f - 64 / 2f;
 		basket.y = 20;
 		basket.width = 64;
 		basket.height = 64;
+
+		// Initialize chickens array
+		chickens = new Array<>();
+		for (int i = 0; i < 5; i++) {
+			Rectangle chicken = new Rectangle();
+			chicken.x = i * 150 + 50;
+			chicken.y = Gdx.graphics.getHeight() - 100;
+			chicken.width = 64;
+			chicken.height = 64;
+			chickens.add(chicken);
+		}
 
 		// Initialize eggs array
 		eggs = new Array<>();
@@ -49,9 +63,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 	private void spawnEgg() {
+		// Choose a random chicken to drop the egg
+		Rectangle chicken = chickens.random();
 		Rectangle egg = new Rectangle();
-		egg.x = MathUtils.random(0, Gdx.graphics.getWidth() - 32);
-		egg.y = Gdx.graphics.getHeight();
+		egg.x = chicken.x + chicken.width / 2 - 16; // Center the egg under the chicken
+		egg.y = chicken.y - 16;
 		egg.width = 32;
 		egg.height = 32;
 		eggs.add(egg);
@@ -70,8 +86,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		// Draw chickens
-		for (int i = 0; i < 5; i++) {
-			batch.draw(chickenTexture, i * 150 + 50, Gdx.graphics.getHeight() - 100);
+		for (Rectangle chicken : chickens) {
+			batch.draw(chickenTexture, chicken.x, chicken.y);
 		}
 
 		// Draw eggs
@@ -88,8 +104,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.end();
 
 		// Basket movement
-		if (Gdx.input.isTouched()) {
-			basket.x = Gdx.input.getX() - basket.width / 2f;
+		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+			basket.x -= 450 * Gdx.graphics.getDeltaTime();
+		}
+		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+			basket.x += 450 * Gdx.graphics.getDeltaTime();
 		}
 
 		// Keep basket within screen bounds
