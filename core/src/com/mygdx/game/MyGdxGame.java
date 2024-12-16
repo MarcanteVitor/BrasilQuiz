@@ -2,23 +2,23 @@ package com.mygdx.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
 public class MyGdxGame extends ApplicationAdapter {
+
+	private ArrowController arrow;
+	private CoyoteController coyote;
+	private MyUiInputProcessor inputProcessor;
 	private SpriteBatch batch;
-	private Texture backgroundTexture;
-	private Texture chickenTexture;
-	private Texture eggTexture;
-	private Texture basketTexture;
 	private Rectangle basket;
-	private Array<Rectangle> eggs;
+	private Array<EggController> eggs;
 	private Array<Rectangle> chickens;
 	private long lastEggTime;
 	private BitmapFont font;
@@ -26,14 +26,17 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	@Override
 	public void create() {
+		Assets.load();
+		Assets.manager.finishLoading();
+
 		batch = new SpriteBatch();
+		coyote = new CoyoteController();
+		arrow = new ArrowController();
 
-		// Load textures
-		backgroundTexture = new Texture("background.jpg"); // Background image
-		chickenTexture = new Texture("galinha.png"); // Placeholder for chicken
-		eggTexture = new Texture("ovo.png"); // Placeholder for egg
-		basketTexture = new Texture("balao.png"); // Placeholder for basket
-
+		inputProcessor = new MyUiInputProcessor(coyote, arrow);
+		InputMultiplexer multiplexer = new InputMultiplexer();
+		multiplexer.addProcessor(inputProcessor);
+		Gdx.input.setInputProcessor(multiplexer);
 
 		// Initialize basket
 		basket = new Rectangle();
@@ -65,11 +68,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	private void spawnEgg() {
 		// Choose a random chicken to drop the egg
 		Rectangle chicken = chickens.random();
-		Rectangle egg = new Rectangle();
-		egg.x = chicken.x + chicken.width / 2 - 16; // Center the egg under the chicken
-		egg.y = chicken.y - 16;
-		egg.width = 32;
-		egg.height = 32;
+		EggController egg = new EggController(
+				chicken.x + chicken.width / 2 - 16,
+				chicken.y - 16,
+				Assets.manager.get(Assets.OVO_TEXTURE)
+		);
 		eggs.add(egg);
 		lastEggTime = TimeUtils.nanoTime();
 	}
@@ -83,20 +86,20 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.begin();
 
 		// Draw background
-		batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		batch.draw((Texture) Assets.manager.get(Assets.BACKGROUND_TEXTURE), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		// Draw chickens
 		for (Rectangle chicken : chickens) {
-			batch.draw(chickenTexture, chicken.x, chicken.y);
+			batch.draw((Texture) Assets.manager.get(Assets.GALINHA_TEXTURE), chicken.x, chicken.y);
 		}
 
 		// Draw eggs
-		for (Rectangle egg : eggs) {
-			batch.draw(eggTexture, egg.x, egg.y);
+		for (EggController egg : eggs) {
+			egg.render(batch);
 		}
 
 		// Draw basket
-		batch.draw(basketTexture, basket.x, basket.y);
+		batch.draw((Texture) Assets.manager.get(Assets.BALAO_TEXTURE), basket.x, basket.y);
 
 		// Draw score
 		font.draw(batch, "Score: " + score, 10, Gdx.graphics.getHeight() - 10);
@@ -117,17 +120,17 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		// Update egg positions
 		for (int i = 0; i < eggs.size; i++) {
-			Rectangle egg = eggs.get(i);
-			egg.y -= 200 * Gdx.graphics.getDeltaTime();
+			EggController egg = eggs.get(i);
+			egg.update(Gdx.graphics.getDeltaTime());
 
 			// Check if egg hits the basket
-			if (egg.overlaps(basket)) {
+			if (egg.getRectangle().overlaps(basket)) {
 				eggs.removeIndex(i);
 				score++;
 			}
 
 			// Remove egg if it goes off-screen
-			if (egg.y + egg.height < 0) {
+			if (egg.isOutOfBounds()) {
 				eggs.removeIndex(i);
 			}
 		}
@@ -141,10 +144,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void dispose() {
 		batch.dispose();
-		backgroundTexture.dispose();
-		chickenTexture.dispose();
-		eggTexture.dispose();
-		basketTexture.dispose();
+		Assets.dispose();
 		font.dispose();
+		for (EggController egg : eggs) {
+			egg.dispose();
+		}
 	}
 }

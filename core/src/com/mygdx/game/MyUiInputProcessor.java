@@ -1,15 +1,45 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 
 public class MyUiInputProcessor implements InputProcessor {
+
+
+    public boolean keyWPress = false;
+    public boolean keySPress = false;
+
+    private CoyoteController coyote;
+    private ArrowController arrow;
+
+    public MyUiInputProcessor(CoyoteController coyote, ArrowController arrow) {
+        this.coyote = coyote;
+        this.arrow = arrow;
+    }
+
     @Override
-    public boolean keyDown(int i) {
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.SPACE) {
+            arrow.shoot(coyote.getX(), coyote.getY());
+            return true;
+        }
+        if (keycode == Input.Keys.S) {
+            keySPress = true;
+        }
+        if (keycode == Input.Keys.W) {
+            keyWPress = true;
+        }
         return false;
     }
 
     @Override
-    public boolean keyUp(int i) {
+    public boolean keyUp(int keycode) {
+        if (keycode == Input.Keys.S) {
+            keySPress = false;
+        }
+        if (keycode == Input.Keys.W) {
+            keyWPress = false;
+        }
         return false;
     }
 

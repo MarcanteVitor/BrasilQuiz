@@ -10,7 +10,7 @@ public class ArrowController {
     private Array<Arrow> arrows;
 
     public ArrowController() {
-        arrowTexture = Assets.manager.get(Assets.ARROW_TEXTURE);
+        arrowTexture = Assets.manager.get(Assets.FLECHA_TEXTURE);
         arrows = new Array<>();
     }
 

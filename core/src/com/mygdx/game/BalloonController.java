@@ -6,17 +6,17 @@ import com.badlogic.gdx.Gdx;
 
 public class BalloonController {
     private Texture balloonTexture;
-    private float x, y, speedY;
+    private float x, y, speed;
 
     public BalloonController() {
-        balloonTexture = Assets.manager.get(Assets.BALLOON_TEXTURE);
+        balloonTexture = Assets.manager.get(Assets.BALAO_TEXTURE);
         x = 200;
         y = 0;
-        speedY = 75;
+        speed = 75;
     }
 
     public void update(float deltaTime) {
-        y += speedY * deltaTime;
+        y += speed * deltaTime;
 
         if (y > Gdx.graphics.getHeight()) {
             y = 0;
