@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class CoyoteController extends GenericController {
 
     public CoyoteController() {
-        this.setTexture(Assets.manager.get(Assets.ARQUEIRO_TEXTURE));
+        this.setTexture(Assets.manager.get(Assets.RAPOSO_TEXTURE));
         this.setX(2);
         this.setY(275);
     }

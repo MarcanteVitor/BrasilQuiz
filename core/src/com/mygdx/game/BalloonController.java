@@ -9,7 +9,7 @@ public class BalloonController {
     private float x, y, speed;
 
     public BalloonController() {
-        balloonTexture = Assets.manager.get(Assets.BALAO_TEXTURE);
+        balloonTexture = Assets.manager.get(Assets.GALINHA_TEXTURE);
         x = 200;
         y = 0;
         speed = 75;

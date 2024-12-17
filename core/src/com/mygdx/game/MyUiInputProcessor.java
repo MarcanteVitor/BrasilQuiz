@@ -10,17 +10,17 @@ public class MyUiInputProcessor implements InputProcessor {
     public boolean keySPress = false;
 
     private CoyoteController coyote;
-    private ArrowController arrow;
+    private ChickenController galinha;
 
-    public MyUiInputProcessor(CoyoteController coyote, ArrowController arrow) {
+    public MyUiInputProcessor(CoyoteController coyote, ChickenController galinha) {
         this.coyote = coyote;
-        this.arrow = arrow;
+        this.galinha = galinha;
     }
 
     @Override
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.SPACE) {
-            arrow.shoot(coyote.getX(), coyote.getY());
+            galinha.shoot(coyote.getX(), coyote.getY());
             return true;
         }
         if (keycode == Input.Keys.S) {

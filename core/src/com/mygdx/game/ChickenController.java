@@ -5,12 +5,12 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.Gdx;
 
-public class ArrowController {
+public class ChickenController {
     private Texture arrowTexture;
     private Array<Arrow> arrows;
 
-    public ArrowController() {
-        arrowTexture = Assets.manager.get(Assets.FLECHA_TEXTURE);
+    public ChickenController() {
+        arrowTexture = Assets.manager.get(Assets.GALINHA_TEXTURE);
         arrows = new Array<>();
     }
 
