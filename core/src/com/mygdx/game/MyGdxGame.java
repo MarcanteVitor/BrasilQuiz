@@ -1,150 +1,187 @@
 package com.mygdx.game;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import java.util.ArrayList;
+
 public class MyGdxGame extends ApplicationAdapter {
+
+
+	private MyUiInputProcessor inputProcessor;
 	private SpriteBatch batch;
-	private Texture backgroundTexture;
-	private Texture chickenTexture;
-	private Texture eggTexture;
-	private Texture basketTexture;
-	private Rectangle basket;
-	private Array<Rectangle> eggs;
-	private Array<Rectangle> chickens;
+	private CoyoteController coyote;
+	private Array<ChickenController> chickens;
 	private long lastEggTime;
 	private BitmapFont font;
 	private int score;
+	private Sound eggCatchSound;
 
+	// Temporizador
+	private static final float GAME_DURATION = 60f; // 60 segundos
+	private float timeRemaining;
+	private boolean gameEnded;
+
+	//Create
 	@Override
 	public void create() {
+		Assets.load();
+		Assets.manager.finishLoading();
+
+		// pega os batch
 		batch = new SpriteBatch();
 
-		// Load textures
-		backgroundTexture = new Texture("background.jpg"); // Background image
-		chickenTexture = new Texture("galinha.png"); // Placeholder for chicken
-		eggTexture = new Texture("ovo.png"); // Placeholder for egg
-		basketTexture = new Texture("balao.png"); // Placeholder for basket
+		inputProcessor = new MyUiInputProcessor();
+		InputMultiplexer multiplexer = new InputMultiplexer();
+		multiplexer.addProcessor(inputProcessor);
+		Gdx.input.setInputProcessor(multiplexer);
+
+		// usado para o som
+		eggCatchSound = Gdx.audio.newSound(Gdx.files.internal("egg_catch.mp3"));
+
+		initialize();
+	}
 
 
-		// Initialize basket
-		basket = new Rectangle();
-		basket.x = Gdx.graphics.getWidth() / 2f - 64 / 2f;
-		basket.y = 20;
-		basket.width = 64;
-		basket.height = 64;
+	private void initialize() {
+		// onde faz toda a inicialização dos valores do jogo
+		coyote = new CoyoteController();
 
-		// Initialize chickens array
-		chickens = new Array<>();
+		// cria as galinhas
+		this.chickens = new Array<>();
 		for (int i = 0; i < 5; i++) {
-			Rectangle chicken = new Rectangle();
-			chicken.x = i * 150 + 50;
-			chicken.y = Gdx.graphics.getHeight() - 100;
-			chicken.width = 64;
-			chicken.height = 64;
-			chickens.add(chicken);
+			ChickenController chicken = new ChickenController();
+			chicken.setX(i * 150 + 50);
+			this.chickens.add(chicken);
 		}
 
-		// Initialize eggs array
-		eggs = new Array<>();
 		spawnEgg();
 
-		// Initialize font and score
+		// score e timer
 		font = new BitmapFont();
 		score = 0;
+		timeRemaining = GAME_DURATION; // Define o tempo inicial
+		gameEnded = false;
 	}
 
 	private void spawnEgg() {
-		// Choose a random chicken to drop the egg
-		Rectangle chicken = chickens.random();
-		Rectangle egg = new Rectangle();
-		egg.x = chicken.x + chicken.width / 2 - 16; // Center the egg under the chicken
-		egg.y = chicken.y - 16;
-		egg.width = 32;
-		egg.height = 32;
-		eggs.add(egg);
+
+		//pega uma galinha aleatoria e faz ela "botar um ovo"
+		ChickenController chicken = chickens.random();
+		chicken.shoot();
 		lastEggTime = TimeUtils.nanoTime();
 	}
 
 	@Override
 	public void render() {
-		// Clear screen
+		// limpa antes de tudo
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		// Draw objects
+		// fica mudando o timer
+		if (!gameEnded) {
+			timeRemaining -= Gdx.graphics.getDeltaTime();
+			if (timeRemaining <= 0) {
+				gameEnded = true;
+				timeRemaining = 0;
+			}
+		}
+
+		// funções pra desenha a tela
 		batch.begin();
+		batch.draw((Texture) Assets.manager.get(Assets.BACKGROUND_TEXTURE),
+				0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-		// Draw background
-		batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		if (!gameEnded) {
+			//  galinhas
+			for (ChickenController chicken : chickens) {
+				chicken.render(batch);
+			}
 
-		// Draw chickens
-		for (Rectangle chicken : chickens) {
-			batch.draw(chickenTexture, chicken.x, chicken.y);
+			// raposo
+			coyote.render(batch);
+
+			//  score e timer
+			drawTextWithBackground("Score: " + score, 10, Gdx.graphics.getHeight() - 10);
+			drawTextWithBackground("Time: " + (int) timeRemaining, 10, Gdx.graphics.getHeight() - 40);
+		} else {
+			// placar
+			drawTextWithBackground("Game Over!", Gdx.graphics.getWidth() / 2f - 70, Gdx.graphics.getHeight() / 2f + 20);
+			drawTextWithBackground("Final Score: " + score, Gdx.graphics.getWidth() / 2f - 90, Gdx.graphics.getHeight() / 2f - 10);
+			drawTextWithBackground("Press 'R' to Restart", Gdx.graphics.getWidth() / 2f - 110, Gdx.graphics.getHeight() / 2f - 40);
+
+			// pega a tecla clicada
+			if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+				initialize();
+			}
 		}
-
-		// Draw eggs
-		for (Rectangle egg : eggs) {
-			batch.draw(eggTexture, egg.x, egg.y);
-		}
-
-		// Draw basket
-		batch.draw(basketTexture, basket.x, basket.y);
-
-		// Draw score
-		font.draw(batch, "Score: " + score, 10, Gdx.graphics.getHeight() - 10);
 
 		batch.end();
 
-		// Basket movement
-		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-			basket.x -= 450 * Gdx.graphics.getDeltaTime();
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-			basket.x += 450 * Gdx.graphics.getDeltaTime();
-		}
+		// movimento do personagem e pegar ovo/adicionar na cesta/raposo
+		if (!gameEnded) {
+			coyote.update(Gdx.graphics.getDeltaTime(), inputProcessor.keyAPress,inputProcessor.keyDPress);
 
-		// Keep basket within screen bounds
-		if (basket.x < 0) basket.x = 0;
-		if (basket.x > Gdx.graphics.getWidth() - basket.width) basket.x = Gdx.graphics.getWidth() - basket.width;
+			for(ChickenController chicken : chickens){
+				int cont = 0;
+				for (EggController egg : chicken.getEggs()) {
+					egg.update(Gdx.graphics.getDeltaTime());
 
-		// Update egg positions
-		for (int i = 0; i < eggs.size; i++) {
-			Rectangle egg = eggs.get(i);
-			egg.y -= 200 * Gdx.graphics.getDeltaTime();
+					if (verificaColisao(egg,this.coyote)) {
+						chicken.getEggs().removeIndex(cont);
+						score++;
+						eggCatchSound.play(); // chamada do som tem que ser aqui
+					}
 
-			// Check if egg hits the basket
-			if (egg.overlaps(basket)) {
-				eggs.removeIndex(i);
-				score++;
+					if (egg.isOutOfBounds()) {
+						chicken.getEggs().removeIndex(cont);
+					}
+					cont++;
+				}
 			}
 
-			// Remove egg if it goes off-screen
-			if (egg.y + egg.height < 0) {
-				eggs.removeIndex(i);
-			}
-		}
 
-		// Spawn new eggs
-		if (TimeUtils.nanoTime() - lastEggTime > 1_000_000_000) {
-			spawnEgg();
+			if (TimeUtils.nanoTime() - lastEggTime > 1_000_000_000) {
+				spawnEgg();
+			}
 		}
 	}
 
+	// fundo preto para os textos
+	private void drawTextWithBackground(String text, float x, float y) {
+		batch.setColor(Color.BLACK);
+		batch.draw((Texture) Assets.manager.get(Assets.BACKGROUND_TEXTURE), x - 5, y - 20, 200, 25);
+		batch.setColor(Color.WHITE);
+		font.setColor(Color.WHITE);
+		font.draw(batch, text, x, y);
+	}
+
+	//dispose de tudo
 	@Override
 	public void dispose() {
 		batch.dispose();
-		backgroundTexture.dispose();
-		chickenTexture.dispose();
-		eggTexture.dispose();
-		basketTexture.dispose();
+		Assets.dispose();
 		font.dispose();
+		eggCatchSound.dispose();
+		for (ChickenController chicken : this.chickens) {
+			chicken.dispose();
+		}
+	}
+
+	public boolean verificaColisao(Colisao obj1, Colisao obj2) {
+		return obj1.getX() < obj2.getX() + obj2.getWidth() &&
+				obj1.getX() + obj1.getWidth() > obj2.getX() &&
+				obj1.getY() < obj2.getY() + obj2.getHeight() &&
+				obj1.getY() + obj1.getHeight() > obj2.getY();
 	}
 }

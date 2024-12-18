@@ -1,15 +1,36 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 
 public class MyUiInputProcessor implements InputProcessor {
+
+
+    public boolean keyAPress = false;
+    public boolean keyDPress = false;
+
+    public MyUiInputProcessor() {}
+
     @Override
-    public boolean keyDown(int i) {
+    public boolean keyDown(int keycode) {
+
+        if (keycode == Input.Keys.A) {
+            keyAPress = true;
+        }
+        if (keycode == Input.Keys.D) {
+            keyDPress = true;
+        }
         return false;
     }
 
     @Override
-    public boolean keyUp(int i) {
+    public boolean keyUp(int keycode) {
+        if (keycode == Input.Keys.A) {
+            keyAPress = false;
+        }
+        if (keycode == Input.Keys.D) {
+            keyDPress = false;
+        }
         return false;
     }
 
