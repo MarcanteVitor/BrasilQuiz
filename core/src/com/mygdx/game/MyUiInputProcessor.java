@@ -6,39 +6,30 @@ import com.badlogic.gdx.InputProcessor;
 public class MyUiInputProcessor implements InputProcessor {
 
 
-    public boolean keyWPress = false;
-    public boolean keySPress = false;
+    public boolean keyAPress = false;
+    public boolean keyDPress = false;
 
-    private CoyoteController coyote;
-    private ChickenController galinha;
-
-    public MyUiInputProcessor(CoyoteController coyote, ChickenController galinha) {
-        this.coyote = coyote;
-        this.galinha = galinha;
-    }
+    public MyUiInputProcessor() {}
 
     @Override
     public boolean keyDown(int keycode) {
-        if (keycode == Input.Keys.SPACE) {
-            galinha.shoot(coyote.getX(), coyote.getY());
-            return true;
+
+        if (keycode == Input.Keys.A) {
+            keyAPress = true;
         }
-        if (keycode == Input.Keys.S) {
-            keySPress = true;
-        }
-        if (keycode == Input.Keys.W) {
-            keyWPress = true;
+        if (keycode == Input.Keys.D) {
+            keyDPress = true;
         }
         return false;
     }
 
     @Override
     public boolean keyUp(int keycode) {
-        if (keycode == Input.Keys.S) {
-            keySPress = false;
+        if (keycode == Input.Keys.A) {
+            keyAPress = false;
         }
-        if (keycode == Input.Keys.W) {
-            keyWPress = false;
+        if (keycode == Input.Keys.D) {
+            keyDPress = false;
         }
         return false;
     }

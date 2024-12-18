@@ -14,17 +14,15 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
+import java.util.ArrayList;
+
 public class MyGdxGame extends ApplicationAdapter {
 
 
-	//cria as instancias
-	private ChickenController galinha;
-	private CoyoteController coyote;
 	private MyUiInputProcessor inputProcessor;
 	private SpriteBatch batch;
-	private Rectangle basket;
-	private Array<EggController> eggs;
-	private Array<Rectangle> chickens;
+	private CoyoteController coyote;
+	private Array<ChickenController> chickens;
 	private long lastEggTime;
 	private BitmapFont font;
 	private int score;
@@ -43,10 +41,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		// pega os batch
 		batch = new SpriteBatch();
-		coyote = new CoyoteController();
-		galinha = new ChickenController();
 
-		inputProcessor = new MyUiInputProcessor(coyote, galinha);
+		inputProcessor = new MyUiInputProcessor();
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(inputProcessor);
 		Gdx.input.setInputProcessor(multiplexer);
@@ -60,25 +56,16 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	private void initialize() {
 		// onde faz toda a inicialização dos valores do jogo
-		basket = new Rectangle();
-		basket.x = Gdx.graphics.getWidth() / 2f - 64 / 2f;
-		basket.y = 20;
-		basket.width = 64;
-		basket.height = 64;
+		coyote = new CoyoteController();
 
 		// cria as galinhas
-		chickens = new Array<>();
+		this.chickens = new Array<>();
 		for (int i = 0; i < 5; i++) {
-			Rectangle chicken = new Rectangle();
-			chicken.x = i * 150 + 50;
-			chicken.y = Gdx.graphics.getHeight() - 100;
-			chicken.width = 64;
-			chicken.height = 64;
-			chickens.add(chicken);
+			ChickenController chicken = new ChickenController();
+			chicken.setX(i * 150 + 50);
+			this.chickens.add(chicken);
 		}
 
-		// array de ovo vazio
-		eggs = new Array<>();
 		spawnEgg();
 
 		// score e timer
@@ -89,15 +76,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 	private void spawnEgg() {
+
 		//pega uma galinha aleatoria e faz ela "botar um ovo"
-		Rectangle chicken = chickens.random();
-		EggController egg = new EggController(
-				chicken.x + chicken.width / 2 - 16,
-				chicken.y - 16,
-				Assets.manager.get(Assets.OVO_TEXTURE)
-		);
-		// depois coloca o ovo no array de ovos
-		eggs.add(egg);
+		ChickenController chicken = chickens.random();
+		chicken.shoot();
 		lastEggTime = TimeUtils.nanoTime();
 	}
 
@@ -117,21 +99,17 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		// funções pra desenha a tela
 		batch.begin();
-		batch.draw((Texture) Assets.manager.get(Assets.BACKGROUND_TEXTURE), 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		batch.draw((Texture) Assets.manager.get(Assets.BACKGROUND_TEXTURE),
+				0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		if (!gameEnded) {
 			//  galinhas
-			for (Rectangle chicken : chickens) {
-				batch.draw((Texture) Assets.manager.get(Assets.GALINHA_TEXTURE), chicken.x, chicken.y);
+			for (ChickenController chicken : chickens) {
+				chicken.render(batch);
 			}
 
-			// ovos
-			for (EggController egg : eggs) {
-				egg.render(batch);
-			}
-
-			// cesta/raposo
-			batch.draw((Texture) Assets.manager.get(Assets.RAPOSO_TEXTURE), basket.x, basket.y);
+			// raposo
+			coyote.render(batch);
 
 			//  score e timer
 			drawTextWithBackground("Score: " + score, 10, Gdx.graphics.getHeight() - 10);
@@ -152,32 +130,26 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		// movimento do personagem e pegar ovo/adicionar na cesta/raposo
 		if (!gameEnded) {
+			coyote.update(Gdx.graphics.getDeltaTime(), inputProcessor.keyAPress,inputProcessor.keyDPress);
 
-			if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-				basket.x -= 450 * Gdx.graphics.getDeltaTime();
-			}
-			if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-				basket.x += 450 * Gdx.graphics.getDeltaTime();
-			}
+			for(ChickenController chicken : chickens){
+				int cont = 0;
+				for (EggController egg : chicken.getEggs()) {
+					egg.update(Gdx.graphics.getDeltaTime());
 
+					if (verificaColisao(egg,this.coyote)) {
+						chicken.getEggs().removeIndex(cont);
+						score++;
+						eggCatchSound.play(); // chamada do som tem que ser aqui
+					}
 
-			if (basket.x < 0) basket.x = 0;
-			if (basket.x > Gdx.graphics.getWidth() - basket.width) basket.x = Gdx.graphics.getWidth() - basket.width;
-
-			for (int i = 0; i < eggs.size; i++) {
-				EggController egg = eggs.get(i);
-				egg.update(Gdx.graphics.getDeltaTime());
-
-				if (egg.getRectangle().overlaps(basket)) {
-					eggs.removeIndex(i);
-					score++;
-					eggCatchSound.play(); // chamada do som tem que ser aqui
-				}
-
-				if (egg.isOutOfBounds()) {
-					eggs.removeIndex(i);
+					if (egg.isOutOfBounds()) {
+						chicken.getEggs().removeIndex(cont);
+					}
+					cont++;
 				}
 			}
+
 
 			if (TimeUtils.nanoTime() - lastEggTime > 1_000_000_000) {
 				spawnEgg();
@@ -201,8 +173,15 @@ public class MyGdxGame extends ApplicationAdapter {
 		Assets.dispose();
 		font.dispose();
 		eggCatchSound.dispose();
-		for (EggController egg : eggs) {
-			egg.dispose();
+		for (ChickenController chicken : this.chickens) {
+			chicken.dispose();
 		}
+	}
+
+	public boolean verificaColisao(Colisao obj1, Colisao obj2) {
+		return obj1.getX() < obj2.getX() + obj2.getWidth() &&
+				obj1.getX() + obj1.getWidth() > obj2.getX() &&
+				obj1.getY() < obj2.getY() + obj2.getHeight() &&
+				obj1.getY() + obj1.getHeight() > obj2.getY();
 	}
 }

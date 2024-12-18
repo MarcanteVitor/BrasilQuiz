@@ -1,32 +1,29 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.graphics.Texture;
+
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Rectangle;
 
 public class EggController extends GenericController {
-    private Rectangle rectangle;
 
-    public EggController(float x, float y, Texture texture) {
-        this.setTexture(texture);
-        this.rectangle = new Rectangle(x, y, 32, 32);
-    }
-
-    public Rectangle getRectangle() {
-        return rectangle;
+    public EggController(float x, float y) {
+        this.setX(x);
+        this.setY(y);
+        this.setHeight(32);
+        this.setWidth(32);
+        this.setTexture(Assets.manager.get(Assets.OVO_TEXTURE));
     }
 
     @Override
     public void render(SpriteBatch batch) {
-        batch.draw(getTexture(), rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        batch.draw(getTexture(), getX(), getY(), getWidth(), getHeight());
     }
 
     public void update(float deltaTime) {
-        rectangle.y -= 200 * deltaTime;
+        setY(getY() - 200 * deltaTime);
     }
 
     public boolean isOutOfBounds() {
-        return rectangle.y + rectangle.height < 0;
+        return getY() + getHeight() < 0;
     }
 
     @Override

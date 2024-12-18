@@ -5,44 +5,54 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.Gdx;
 
-public class ChickenController {
-    private Texture arrowTexture;
-    private Array<Arrow> arrows;
+public class ChickenController extends GenericController {
+
+    private Array<EggController> eggs;
 
     public ChickenController() {
-        arrowTexture = Assets.manager.get(Assets.GALINHA_TEXTURE);
-        arrows = new Array<>();
+        this.setTexture(Assets.manager.get(Assets.GALINHA_TEXTURE));
+        this.setY(Gdx.graphics.getHeight() - 100);
+        this.setHeight(64);
+        this.setWidth(64);
+        eggs = new Array<>();
     }
 
-    public void shoot(float startX, float startY) {
-        arrows.add(new Arrow(startX, startY));
+    public void shoot() {
+        eggs.add(new EggController(this.getX(), this.getY()));
     }
 
-    public void update(float deltaTime) {
-        for (Arrow arrow : arrows) {
-            arrow.x += 300 * deltaTime;
-
-            if (arrow.x > Gdx.graphics.getWidth()) {
-                arrows.removeValue(arrow, true);
-            }
-        }
-    }
+//    public void update(float deltaTime) {
+//        for (EggController egg : eggs) {
+//            egg.setX(egg.getX() + 300 * deltaTime);
+//
+//            if (egg.getX() > Gdx.graphics.getWidth()) {
+//                eggs.removeValue(egg, true);
+//            }
+//        }
+//    }
 
     public void render(SpriteBatch batch) {
-        for (Arrow arrow : arrows) {
-            batch.draw(arrowTexture, arrow.x, arrow.y);
+
+        batch.draw(getTexture(), getX(), getY(),getWidth(),getHeight());
+
+        for (EggController egg : this.getEggs()) {
+            egg.render(batch);
         }
     }
 
+    public Array<EggController> getEggs() {
+        return eggs;
+    }
+
+    public void setEggs(Array<EggController> eggs) {
+        this.eggs = eggs;
+    }
+
+    @Override
     public void dispose() {
-        arrowTexture.dispose();
-    }
-
-    private static class Arrow {
-        float x, y;
-        Arrow(float x, float y) {
-            this.x = x;
-            this.y = y;
+        for (EggController egg : this.getEggs()) {
+            egg.dispose();
         }
+        super.dispose();
     }
 }
