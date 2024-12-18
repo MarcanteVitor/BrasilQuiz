@@ -1,9 +1,7 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.*;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -26,8 +24,6 @@ public class MyGdxGame extends ApplicationAdapter {
 	private long lastEggTime;
 	private BitmapFont font;
 	private int score;
-	private Sound eggCatchSound;
-
 	// Temporizador
 	private static final float GAME_DURATION = 60f; // 60 segundos
 	private float timeRemaining;
@@ -36,9 +32,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	//Create
 	@Override
 	public void create() {
+		//Aqui ele carrega os assetss e trava a te terminar o mesmo
 		Assets.load();
 		Assets.manager.finishLoading();
-
+		Assets.showMusic();
 		// pega os batch
 		batch = new SpriteBatch();
 
@@ -46,9 +43,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(inputProcessor);
 		Gdx.input.setInputProcessor(multiplexer);
-
-		// usado para o som
-		eggCatchSound = Gdx.audio.newSound(Gdx.files.internal("egg_catch.mp3"));
 
 		initialize();
 	}
@@ -58,17 +52,15 @@ public class MyGdxGame extends ApplicationAdapter {
 		// onde faz toda a inicialização dos valores do jogo
 		coyote = new CoyoteController();
 
-		// cria as galinhas
 		this.chickens = new Array<>();
-		for (int i = 0; i < 5; i++) {
+
+		for (int i = 0; i < 4; i++) {
 			ChickenController chicken = new ChickenController();
 			chicken.setX(i * 150 + 50);
 			this.chickens.add(chicken);
 		}
 
-		spawnEgg();
-
-		// score e timer
+		// score e timer todo: precisa ajustar
 		font = new BitmapFont();
 		score = 0;
 		timeRemaining = GAME_DURATION; // Define o tempo inicial
@@ -140,7 +132,9 @@ public class MyGdxGame extends ApplicationAdapter {
 					if (verificaColisao(egg,this.coyote)) {
 						chicken.getEggs().removeIndex(cont);
 						score++;
-						eggCatchSound.play(); // chamada do som tem que ser aqui
+
+						//PLAY NO SOM TODO: ta com deley
+						egg.getEggCatchSound().play();//1.0f volume
 					}
 
 					if (egg.isOutOfBounds()) {
@@ -172,7 +166,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.dispose();
 		Assets.dispose();
 		font.dispose();
-		eggCatchSound.dispose();
 		for (ChickenController chicken : this.chickens) {
 			chicken.dispose();
 		}

@@ -1,16 +1,28 @@
 package com.mygdx.game;
 
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class EggController extends GenericController {
 
+    private Sound eggCatchSound;
     public EggController(float x, float y) {
         this.setX(x);
         this.setY(y);
         this.setHeight(32);
         this.setWidth(32);
         this.setTexture(Assets.manager.get(Assets.OVO_TEXTURE));
+        this.setEggCatchSound(Assets.manager.get(Assets.CATCH_EGG_SOUND));
+    }
+
+
+    public Sound getEggCatchSound() {
+        return eggCatchSound;
+    }
+
+    public void setEggCatchSound(Sound eggCatchSound) {
+        this.eggCatchSound = eggCatchSound;
     }
 
     @Override
