@@ -8,6 +8,9 @@ public class MyUiInputProcessor implements InputProcessor {
 
     public boolean keyAPress = false;
     public boolean keyDPress = false;
+    public boolean keyEnterPress = false;
+
+
 
     public MyUiInputProcessor() {}
 
@@ -20,6 +23,9 @@ public class MyUiInputProcessor implements InputProcessor {
         if (keycode == Input.Keys.D) {
             keyDPress = true;
         }
+        if (keycode == Input.Keys.ENTER) {
+            keyEnterPress = true;
+        }
         return false;
     }
 
@@ -30,6 +36,10 @@ public class MyUiInputProcessor implements InputProcessor {
         }
         if (keycode == Input.Keys.D) {
             keyDPress = false;
+        }
+
+        if (keycode == Input.Keys.ENTER) {
+            keyEnterPress = false;
         }
         return false;
     }
